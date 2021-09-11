@@ -30,6 +30,7 @@ func (l PostgreSQLLoader) Load() (*generator.Schema, error) {
 	defer rows.Close()
 
 	tables := map[string]*generator.Table{}
+	tableList := []*generator.Table{}
 
 	for rows.Next() {
 		table := &generator.Table{}
@@ -38,6 +39,7 @@ func (l PostgreSQLLoader) Load() (*generator.Schema, error) {
 		}
 
 		tables[table.Name] = table
+		tableList = append(tableList, table)
 	}
 
 	if err := fetchColumns(conn, tables); err != nil {
@@ -45,17 +47,8 @@ func (l PostgreSQLLoader) Load() (*generator.Schema, error) {
 	}
 
 	return &generator.Schema{
-		Tables: getTables(tables),
+		Tables: tableList,
 	}, nil
-}
-
-func getTables(tables map[string]*generator.Table) []*generator.Table {
-	results := make([]*generator.Table, 0, len(tables))
-	for _, v := range tables {
-		results = append(results, v)
-	}
-
-	return results
 }
 
 func fetchColumns(conn *pgx.Conn, tables map[string]*generator.Table) error {
