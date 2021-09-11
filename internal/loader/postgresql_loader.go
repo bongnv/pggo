@@ -22,7 +22,7 @@ func (l PostgreSQLLoader) Load() (*generator.Schema, error) {
 	}
 	defer conn.Close(ctx)
 
-	rows, err := conn.Query(ctx, "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
+	rows, err := conn.Query(ctx, "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name")
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func getTables(tables map[string]*generator.Table) []*generator.Table {
 
 func fetchColumns(conn *pgx.Conn, tables map[string]*generator.Table) error {
 	ctx := context.Background()
-	rows, err := conn.Query(ctx, "SELECT table_name, column_name, is_nullable, data_type FROM information_schema.columns WHERE table_schema = 'public'")
+	rows, err := conn.Query(ctx, "SELECT table_name, column_name, is_nullable, data_type FROM information_schema.columns WHERE table_schema = 'public' ORDER BY column_name")
 	if err != nil {
 		return err
 	}
