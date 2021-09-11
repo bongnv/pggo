@@ -11,7 +11,7 @@ import (
 
 func Test_PostgreSQLLoader(t *testing.T) {
 	l := loader.PostgreSQLLoader{
-		URL: "postgres://postgres:postgres@localhost:5432/postgresdb",
+		URL: "postgres://postgres:postgres@localhost:5432/postgres",
 	}
 	schema, err := l.Load()
 	require.NoError(t, err)

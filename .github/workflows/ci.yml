@@ -25,6 +25,18 @@ jobs:
         go: [1.14, 1.15, 1.16, 1.17]
     name: ${{ matrix.os }} @ Go ${{ matrix.go }}
     runs-on: ${{ matrix.os }}
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Set up Go ${{ matrix.go }}
         uses: actions/setup-go@v2
@@ -32,7 +44,12 @@ jobs:
           go-version: ${{ matrix.go }}
 
       - uses: actions/checkout@v2
-
+      - uses: joshuaavalon/flyway-action@v1
+        with:
+          url: jdbc:postgresql://postgres:5432/postgres
+          user: postgres
+          password: postgres
+          locations: filesystem:./test/migration/sql
       - uses: actions/cache@v2
         with:
           path: ~/go/pkg/mod
