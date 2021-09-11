@@ -18,5 +18,19 @@ func Test_PostgreSQLLoader(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, schema.Tables, 2)
 	require.Equal(t, "flyway_schema_history", schema.Tables[0].Name)
-	require.Equal(t, "sample_table", schema.Tables[1].Name)
+
+	sampleTable := schema.Tables[1]
+	require.Equal(t, "sample_table", sampleTable.Name)
+	require.Len(t, sampleTable.Columns, 2)
+
+	idCol := sampleTable.Columns[0]
+	nameCol := sampleTable.Columns[1]
+
+	require.Equal(t, "id", idCol.Name)
+	require.False(t, idCol.Nullable)
+	require.Equal(t, "uuid", idCol.DataType)
+
+	require.Equal(t, "name", nameCol.Name)
+	require.True(t, nameCol.Nullable)
+	require.Equal(t, "text", nameCol.DataType)
 }
