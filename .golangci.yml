@@ -1,0 +1,14 @@
+linters-settings:
+  goimports:
+    local-prefixes: github.com/bongnv/pggo
+
+linters:
+  enable:
+    - gofmt
+    - govet
+    - errcheck
+    - megacheck
+    - misspell
+    - goconst
+    - goimports
+    - revive
