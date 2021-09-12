@@ -1,0 +1,11 @@
+package {{ .PackageName }}
+
+import (
+	"github.com/google/uuid"
+)
+
+// SampleTable represents {{ .Table.Name }} table.
+type SampleTable struct {
+	ID   uuid.UUID
+	Name string
+}

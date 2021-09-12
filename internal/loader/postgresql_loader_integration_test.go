@@ -17,9 +17,11 @@ func Test_PostgreSQLLoader(t *testing.T) {
 	schema, err := l.Load()
 	require.NoError(t, err)
 	require.Len(t, schema.Tables, 2)
-	require.Equal(t, "flyway_schema_history", schema.Tables[0].Name)
+	require.Contains(t, schema.Tables, "flyway_schema_history")
+	require.Equal(t, "flyway_schema_history", schema.Tables["flyway_schema_history"].Name)
 
-	sampleTable := schema.Tables[1]
+	sampleTable := schema.Tables["sample_table"]
+	require.NotNil(t, sampleTable)
 	require.Equal(t, "sample_table", sampleTable.Name)
 	require.Len(t, sampleTable.Columns, 2)
 
@@ -31,6 +33,6 @@ func Test_PostgreSQLLoader(t *testing.T) {
 	require.Equal(t, "uuid", idCol.DataType)
 
 	require.Equal(t, "name", nameCol.Name)
-	require.True(t, nameCol.Nullable)
+	require.False(t, nameCol.Nullable)
 	require.Equal(t, "text", nameCol.DataType)
 }
