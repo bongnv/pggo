@@ -15,7 +15,7 @@ test-integration: ## Rull all tests including integration tests
 	go test -v -p 1 -tags integration ./...
 
 .PHONY: test-generate
-test-generate: ## Run the command to test generating codes.
+test-command: ## Run the command to test generating codes.
 	./scripts/test-command.sh
 
 .PHONY: test-ci
