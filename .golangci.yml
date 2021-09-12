@@ -12,3 +12,4 @@ linters:
     - goconst
     - goimports
     - revive
+    - golint
