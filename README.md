@@ -20,3 +20,11 @@ A code generator that allows you to write SQL queries in Go way.
   ```
 
 - Run `make help` to see all available commands with `make`.
+
+
+## References
+
+The project is inspired by:
+- https://github.com/huandu/go-sqlbuilder
+- https://github.com/lqs/sqlingo
+- https://github.com/xo/xo
