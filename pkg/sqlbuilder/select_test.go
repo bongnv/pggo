@@ -12,7 +12,7 @@ type mockTable struct {
 	name string
 }
 
-func (t mockTable) Name() string {
+func (t mockTable) SQL() string {
 	return t.name
 }
 
@@ -21,8 +21,8 @@ type mockColumn struct {
 	name  string
 }
 
-func (c mockColumn) Name() string {
-	return c.name
+func (c mockColumn) SQL() string {
+	return c.table + "." + c.name
 }
 
 func (c mockColumn) TableName() string {
@@ -38,7 +38,11 @@ func Test_SelectBuilder_Build_Happy(t *testing.T) {
 		name:  "id",
 		table: "person",
 	}
-	sql, args := f.Select(idCol).From(personTable).Build()
-	require.Equal(t, "SELECT person.id FROM person", sql)
+	nameCol := &mockColumn{
+		name:  "name",
+		table: "person",
+	}
+	sql, args := f.Select(idCol, nameCol).From(personTable).Build()
+	require.Equal(t, "SELECT person.id, person.name FROM person", sql)
 	require.Len(t, args, 0)
 }

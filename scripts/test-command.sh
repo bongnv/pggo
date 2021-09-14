@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+set -e
+
 cd "$(git rev-parse --show-toplevel)"
 
 RUNNING="\x1b[1mRunning: "
@@ -13,7 +15,7 @@ RESET="\x1b[0m"
 #         sh ${f}/generate.sh
 #     fi
 # done
-go run cmd/pggo/main.go --url "postgres://postgres:postgres@localhost:5432/postgres" --table sample_table --dir ./test/generated/internal/storage
+go run cmd/pggo/main.go --url "postgres://postgres:postgres@localhost:5432/postgres" --table sample_table --dir ./test/generated/internal/model
 
 echo "${RUNNING}git diff${RESET}"
 RET_DIFF=$(git diff --no-prefix HEAD 2>&1)

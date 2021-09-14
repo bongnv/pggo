@@ -39,6 +39,16 @@ func Test_Generator_happy(t *testing.T) {
 			Tables: map[string]*generator.Table{
 				"mock_table": {
 					Name: "mock_table",
+					Columns: []*generator.Column{
+						{
+							Name:     "id",
+							DataType: "uuid",
+						},
+						{
+							Name:     "name",
+							DataType: "text",
+						},
+					},
 				},
 			},
 		},
@@ -50,7 +60,47 @@ func Test_Generator_happy(t *testing.T) {
 		Writer:       writer,
 	}
 	require.NoError(t, g.Generate())
-	require.Equal(t, "mock_table.pggo.go\npackage model\n\nimport (\n\t\"github.com/google/uuid\"\n)\n\n// SampleTable represents mock_table table.\ntype SampleTable struct {\n\tID   uuid.UUID\n\tName string\n}\n", writer.String())
+	require.Equal(t, `mock_table.pggo.go
+package model
+
+import (
+	"github.com/google/uuid"
+)
+
+// SampleTable represents mock_table table.
+type SampleTable struct {
+	ID   uuid.UUID
+	Name string
+}
+schema/mock_table.pggo.go
+package schema
+
+import "github.com/bongnv/pggo/pkg/sqlschema"
+
+// SampleTable defines the schema of mock_table.
+var SampleTable = struct {
+	sqlschema.Table
+	ID   sqlschema.Column
+	Name sqlschema.Column
+}{
+	Table: sqlschema.Table{
+		Name: "mock_table",
+	},
+}
+
+func init() {
+	SampleTable.ID = sqlschema.Column{
+		Table: SampleTable,
+		Name:  "id",
+	}
+
+	SampleTable.Name = sqlschema.Column{
+		Table: SampleTable,
+		Name:  "name",
+	}
+}
+`,
+		writer.String())
 }
 
 func Test_Generator_table_not_found(t *testing.T) {
