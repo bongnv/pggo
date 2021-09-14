@@ -39,6 +39,16 @@ func Test_Generator_happy(t *testing.T) {
 			Tables: map[string]*generator.Table{
 				"mock_table": {
 					Name: "mock_table",
+					Columns: []*generator.Column{
+						{
+							Name:     "id",
+							DataType: "uuid",
+						},
+						{
+							Name:     "name",
+							DataType: "text",
+						},
+					},
 				},
 			},
 		},
