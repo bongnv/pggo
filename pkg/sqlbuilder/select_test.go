@@ -38,7 +38,11 @@ func Test_SelectBuilder_Build_Happy(t *testing.T) {
 		name:  "id",
 		table: "person",
 	}
-	sql, args := f.Select(idCol).From(personTable).Build()
-	require.Equal(t, "SELECT person.id FROM person", sql)
+	nameCol := &mockColumn{
+		name:  "name",
+		table: "person",
+	}
+	sql, args := f.Select(idCol, nameCol).From(personTable).Build()
+	require.Equal(t, "SELECT person.id, person.name FROM person", sql)
 	require.Len(t, args, 0)
 }
