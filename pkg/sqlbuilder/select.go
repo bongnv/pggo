@@ -1,16 +1,17 @@
 package sqlbuilder
 
-import "strings"
+import (
+	"strings"
+)
 
 // Table is an interface to represent a table in SQL DB.
 type Table interface {
-	Name() string
+	SQL() string
 }
 
 // Column is an interface to represent a column in SQL DB.
 type Column interface {
-	TableName() string
-	Name() string
+	SQL() string
 }
 
 // SelectBuilder is a builder implementation of a select query.
@@ -33,13 +34,11 @@ func (b SelectBuilder) Build() (string, []interface{}) {
 		if i > 0 {
 			_, _ = sb.WriteString(", ")
 		}
-		_, _ = sb.WriteString(col.TableName())
-		_, _ = sb.WriteString(".")
-		_, _ = sb.WriteString(col.Name())
+		_, _ = sb.WriteString(col.SQL())
 	}
 
 	_, _ = sb.WriteString(" FROM ")
-	_, _ = sb.WriteString(b.table.Name())
+	_, _ = sb.WriteString(b.table.SQL())
 
 	return sb.String(), nil
 }
