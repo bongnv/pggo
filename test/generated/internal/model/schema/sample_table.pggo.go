@@ -8,18 +8,18 @@ var SampleTable = struct {
 	ID   sqlbuilder.Column
 	Name sqlbuilder.Column
 }{
-	Table: sqlbuilder.Table{
+	Table: sqlbuilder.BaseTable{
 		Name: "sample_table",
 	},
 }
 
 func init() {
-	SampleTable.ID = sqlbuilder.Column{
+	SampleTable.ID = sqlbuilder.BaseColumn{
 		Table: SampleTable,
 		Name:  "id",
 	}
 
-	SampleTable.Name = sqlbuilder.Column{
+	SampleTable.Name = sqlbuilder.BaseColumn{
 		Table: SampleTable,
 		Name:  "name",
 	}

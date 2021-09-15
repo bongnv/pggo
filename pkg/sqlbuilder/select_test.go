@@ -10,14 +10,14 @@ import (
 
 func Test_SelectBuilder_Build_Happy(t *testing.T) {
 	f := sqlbuilder.Factory{}
-	personTable := &sqlbuilder.Table{
+	personTable := &sqlbuilder.BaseTable{
 		Name: "person",
 	}
-	idCol := &sqlbuilder.Column{
+	idCol := &sqlbuilder.BaseColumn{
 		Table: personTable,
 		Name:  "id",
 	}
-	nameCol := &sqlbuilder.Column{
+	nameCol := &sqlbuilder.BaseColumn{
 		Table: personTable,
 		Name:  "name",
 	}

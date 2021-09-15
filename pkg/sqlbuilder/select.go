@@ -4,44 +4,44 @@ import (
 	"strings"
 )
 
-// Table represents a table in a database.
-type Table struct {
+// BaseTable represents a table in a database.
+type BaseTable struct {
 	Name string
 }
 
 // SQL returns SQL expression of a table.
-func (t Table) SQL() string {
+func (t BaseTable) SQL() string {
 	return t.Name
 }
 
-// ITable is an interface of a table.
-type ITable interface {
+// Table is an interface of a table.
+type Table interface {
 	SQL() string
 }
 
-// IColumn is an interface of a column.
-type IColumn interface {
+// Column is an interface of a column.
+type Column interface {
 	SQL() string
 }
 
 // Column represents a column in a table.
-type Column struct {
-	Table ITable
+type BaseColumn struct {
+	Table Table
 	Name  string
 }
 
 // SQL returns SQL expression of a column.
-func (c Column) SQL() string {
+func (c BaseColumn) SQL() string {
 	return c.Table.SQL() + "." + c.Name
 }
 
 // SelectBuilder is a builder implementation of a select query.
 type SelectBuilder struct {
-	cols  []IColumn
-	table ITable
+	cols  []Column
+	table Table
 }
 
-func (b *SelectBuilder) From(table ITable) *SelectBuilder {
+func (b *SelectBuilder) From(table Table) *SelectBuilder {
 	b.table = table
 	return b
 }
