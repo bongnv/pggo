@@ -25,7 +25,7 @@ A code generator that allows you to write SQL queries in Go way.
 ## References
 
 The project is inspired by:
-- https://github.com/gocraft/dbr
+- https://github.com/Masterminds/squirrel
 - https://github.com/huandu/go-sqlbuilder
 - https://github.com/lqs/sqlingo
 - https://github.com/xo/xo

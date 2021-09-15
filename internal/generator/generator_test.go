@@ -79,25 +79,13 @@ import "github.com/bongnv/pggo/pkg/sqlbuilder"
 
 // SampleTable defines the schema of mock_table.
 var SampleTable = struct {
-	sqlbuilder.Table
-	ID   sqlbuilder.Column
-	Name sqlbuilder.Column
+	sqlbuilder.BaseTable
+	ID   string
+	Name string
 }{
-	Table: sqlbuilder.BaseTable{
-		Name: "mock_table",
-	},
-}
-
-func init() {
-	SampleTable.ID = sqlbuilder.BaseColumn{
-		Table: SampleTable,
-		Name:  "id",
-	}
-
-	SampleTable.Name = sqlbuilder.BaseColumn{
-		Table: SampleTable,
-		Name:  "name",
-	}
+	BaseTable: "mock_table",
+	ID:        "id",
+	Name:      "name",
 }
 `,
 		writer.String())

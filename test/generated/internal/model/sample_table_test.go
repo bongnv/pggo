@@ -11,7 +11,9 @@ import (
 
 func Test_SampleTable(t *testing.T) {
 	f := sqlbuilder.Factory{}
-	sql, args := f.Select(schema.SampleTable.ID, schema.SampleTable.Name).From(schema.SampleTable).Build()
+	sql, args, err := f.Select(schema.SampleTable.ID, schema.SampleTable.Name).From(schema.SampleTable).Build()
+
+	require.NoError(t, err)
 	require.Nil(t, args)
-	require.Equal(t, "SELECT sample_table.id, sample_table.name FROM sample_table", sql)
+	require.Equal(t, "SELECT id, name FROM sample_table", sql)
 }
