@@ -21,7 +21,6 @@ type ITable interface {
 
 // IColumn is an interface of a column.
 type IColumn interface {
-	GetTable() ITable
 	SQL() string
 }
 
@@ -34,10 +33,6 @@ type Column struct {
 // SQL returns SQL expression of a column.
 func (c Column) SQL() string {
 	return c.Table.SQL() + "." + c.Name
-}
-
-func (c Column) GetTable() ITable {
-	return c.Table
 }
 
 // SelectBuilder is a builder implementation of a select query.
