@@ -75,26 +75,26 @@ type SampleTable struct {
 schema/mock_table.pggo.go
 package schema
 
-import "github.com/bongnv/pggo/pkg/sqlschema"
+import "github.com/bongnv/pggo/pkg/sqlbuilder"
 
 // SampleTable defines the schema of mock_table.
 var SampleTable = struct {
-	sqlschema.Table
-	ID   sqlschema.Column
-	Name sqlschema.Column
+	sqlbuilder.Table
+	ID   sqlbuilder.Column
+	Name sqlbuilder.Column
 }{
-	Table: sqlschema.Table{
+	Table: sqlbuilder.BaseTable{
 		Name: "mock_table",
 	},
 }
 
 func init() {
-	SampleTable.ID = sqlschema.Column{
+	SampleTable.ID = sqlbuilder.BaseColumn{
 		Table: SampleTable,
 		Name:  "id",
 	}
 
-	SampleTable.Name = sqlschema.Column{
+	SampleTable.Name = sqlbuilder.BaseColumn{
 		Table: SampleTable,
 		Name:  "name",
 	}
