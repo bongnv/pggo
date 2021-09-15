@@ -4,7 +4,7 @@ package sqlbuilder
 type Factory struct{}
 
 // Select creates a new builder for a SELECT query.
-func (f Factory) Select(cols ...Column) *SelectBuilder {
+func (f Factory) Select(cols ...string) *SelectBuilder {
 	return &SelectBuilder{
 		cols: cols,
 	}

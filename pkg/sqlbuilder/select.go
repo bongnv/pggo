@@ -1,17 +1,16 @@
 package sqlbuilder
 
 import (
+	"errors"
 	"strings"
 )
 
 // BaseTable represents a table in a database.
-type BaseTable struct {
-	Name string
-}
+type BaseTable string
 
 // SQL returns SQL expression of a table.
 func (t BaseTable) SQL() string {
-	return t.Name
+	return string(t)
 }
 
 // Table is an interface of a table.
@@ -19,35 +18,31 @@ type Table interface {
 	SQL() string
 }
 
-// Column is an interface of a column.
-type Column interface {
-	SQL() string
-}
-
-// Column represents a column in a table.
-type BaseColumn struct {
-	Table Table
-	Name  string
-}
-
-// SQL returns SQL expression of a column.
-func (c BaseColumn) SQL() string {
-	return c.Table.SQL() + "." + c.Name
-}
-
 // SelectBuilder is a builder implementation of a select query.
 type SelectBuilder struct {
-	cols  []Column
+	cols  []string
 	table Table
+	err   error
 }
 
-func (b *SelectBuilder) From(table Table) *SelectBuilder {
-	b.table = table
+func (b *SelectBuilder) From(table interface{}) *SelectBuilder {
+	switch v := table.(type) {
+	case string:
+		b.table = BaseTable(v)
+	case Table:
+		b.table = v
+	default:
+		b.err = errors.New("sqlbuilder: the given table has invalid type")
+	}
 	return b
 }
 
 // Build compiles all provided data to return a SELECT query and arguments.
-func (b SelectBuilder) Build() (string, []interface{}) {
+func (b SelectBuilder) Build() (string, []interface{}, error) {
+	if b.err != nil {
+		return "", nil, b.err
+	}
+
 	sb := &strings.Builder{}
 	_, _ = sb.WriteString("SELECT ")
 
@@ -55,11 +50,11 @@ func (b SelectBuilder) Build() (string, []interface{}) {
 		if i > 0 {
 			_, _ = sb.WriteString(", ")
 		}
-		_, _ = sb.WriteString(col.SQL())
+		_, _ = sb.WriteString(col)
 	}
 
 	_, _ = sb.WriteString(" FROM ")
 	_, _ = sb.WriteString(b.table.SQL())
 
-	return sb.String(), nil
+	return sb.String(), nil, nil
 }
