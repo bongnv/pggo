@@ -11,7 +11,7 @@ import (
 func Test_SelectBuilder_Build_Happy(t *testing.T) {
 	f := sqlbuilder.Factory{}
 	t.Run("table withstring", func(t *testing.T) {
-		sql, args, err := f.Select("id", "name").From("person").Build()
+		sql, args, err := f.Select("id", "name").FromSQL("person").Build()
 		require.NoError(t, err)
 		require.Equal(t, "SELECT id, name FROM person", sql)
 		require.Len(t, args, 0)
@@ -23,12 +23,5 @@ func Test_SelectBuilder_Build_Happy(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "SELECT id, name FROM person", sql)
 		require.Len(t, args, 0)
-	})
-
-	t.Run("table with invalid type", func(t *testing.T) {
-		sql, args, err := f.Select("id", "name").From(100).Build()
-		require.EqualError(t, err, "sqlbuilder: the given table has invalid type")
-		require.Empty(t, args)
-		require.Empty(t, sql)
 	})
 }
