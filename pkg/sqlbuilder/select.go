@@ -4,23 +4,49 @@ import (
 	"strings"
 )
 
-// Table is an interface to represent a table in SQL DB.
-type Table interface {
+// Table represents a table in a database.
+type Table struct {
+	Name string
+}
+
+// SQL returns SQL expression of a table.
+func (t Table) SQL() string {
+	return t.Name
+}
+
+// ITable is an interface of a table.
+type ITable interface {
 	SQL() string
 }
 
-// Column is an interface to represent a column in SQL DB.
-type Column interface {
+// IColumn is an interface of a column.
+type IColumn interface {
+	GetTable() ITable
 	SQL() string
+}
+
+// Column represents a column in a table.
+type Column struct {
+	Table ITable
+	Name  string
+}
+
+// SQL returns SQL expression of a column.
+func (c Column) SQL() string {
+	return c.Table.SQL() + "." + c.Name
+}
+
+func (c Column) GetTable() ITable {
+	return c.Table
 }
 
 // SelectBuilder is a builder implementation of a select query.
 type SelectBuilder struct {
-	cols  []Column
-	table Table
+	cols  []IColumn
+	table ITable
 }
 
-func (b *SelectBuilder) From(table Table) *SelectBuilder {
+func (b *SelectBuilder) From(table ITable) *SelectBuilder {
 	b.table = table
 	return b
 }
