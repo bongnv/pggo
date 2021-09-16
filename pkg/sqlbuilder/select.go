@@ -1,39 +1,50 @@
 package sqlbuilder
 
 import (
+	"io"
 	"strings"
 )
 
 // BaseTable represents a table in a database.
 type BaseTable string
 
-// SQL returns SQL expression of a table.
-func (t BaseTable) SQL() string {
-	return string(t)
+// Build adds table name to the SQL query.
+func (t BaseTable) Build(sw io.StringWriter, _ ArgAppender) {
+	_, _ = sw.WriteString(string(t))
+}
+
+func (t BaseTable) tableOnly() {}
+
+// Builder is the interface that wraps the Build method.
+type Builder interface {
+	// Build contructs SQL and update arguments if necessary.
+	Build(sw io.StringWriter, args ArgAppender)
 }
 
 // Table is an interface of a table.
 type Table interface {
-	SQL() string
+	Builder
+	tableOnly()
 }
 
 // SelectBuilder is a builder implementation of a select query.
 type SelectBuilder struct {
 	cols      []string
-	table     string
+	table     Table
 	conds     []Condition
 	arguments *argumentList
 }
 
 // FromSQL sets the FROM clause for the query.
 func (b *SelectBuilder) FromSQL(table string) *SelectBuilder {
-	b.table = table
+	b.table = BaseTable(table)
 	return b
 }
 
 // From sets the FROM clause from the given table for the query.
 func (b *SelectBuilder) From(table Table) *SelectBuilder {
-	return b.FromSQL(table.SQL())
+	b.table = table
+	return b
 }
 
 // Where sets the WHERE clause for the query.
@@ -54,9 +65,9 @@ func (b SelectBuilder) Build() (string, []interface{}, error) {
 		_, _ = sb.WriteString(col)
 	}
 
-	if b.table != "" {
+	if b.table != nil {
 		_, _ = sb.WriteString(" FROM ")
-		_, _ = sb.WriteString(b.table)
+		b.table.Build(sb, b.arguments)
 	}
 
 	if len(b.conds) > 0 {
@@ -76,6 +87,6 @@ type argumentList struct {
 	args []interface{}
 }
 
-func (l *argumentList) Append(v interface{}) {
-	l.args = append(l.args, v)
+func (l *argumentList) Append(values ...interface{}) {
+	l.args = append(l.args, values...)
 }
