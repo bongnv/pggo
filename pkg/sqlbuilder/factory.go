@@ -6,6 +6,7 @@ type Factory struct{}
 // Select creates a new builder for a SELECT query.
 func (f Factory) Select(cols ...string) *SelectBuilder {
 	return &SelectBuilder{
-		cols: cols,
+		cols:      cols,
+		arguments: &argumentList{},
 	}
 }
