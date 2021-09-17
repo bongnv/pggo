@@ -10,8 +10,7 @@ import (
 )
 
 func Test_SampleTable(t *testing.T) {
-	f := sqlbuilder.Factory{}
-	sql, args, err := f.Select(schema.SampleTable.ID, schema.SampleTable.Name).From(schema.SampleTable).Build()
+	sql, args, err := sqlbuilder.Select(schema.SampleTable.ID, schema.SampleTable.Name).From(schema.SampleTable).SQL()
 
 	require.NoError(t, err)
 	require.Nil(t, args)
