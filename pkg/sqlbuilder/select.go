@@ -5,6 +5,13 @@ import (
 	"strings"
 )
 
+// Select starts a new SELECT query.
+func Select(cols ...string) *SelectBuilder {
+	return &SelectBuilder{
+		cols: cols,
+	}
+}
+
 // BaseTable represents a table in a database.
 type BaseTable string
 
@@ -29,33 +36,34 @@ type Table interface {
 
 // SelectBuilder is a builder implementation of a select query.
 type SelectBuilder struct {
-	cols      []string
-	table     Table
-	conds     []Condition
-	arguments *argumentList
+	cols  []string
+	from  Builder
+	where Builder
 }
 
-// FromSQL sets the FROM clause for the query.
-func (b *SelectBuilder) FromSQL(table string) *SelectBuilder {
-	b.table = BaseTable(table)
-	return b
+// FromTable sets the FROM clause for the query with the table is provided with a string.
+func (b *SelectBuilder) FromTable(table string) *SelectBuilder {
+	return b.From(BaseTable(table))
 }
 
 // From sets the FROM clause from the given table for the query.
 func (b *SelectBuilder) From(table Table) *SelectBuilder {
-	b.table = table
+	b.from = fromClause{
+		table: table,
+	}
 	return b
 }
 
 // Where sets the WHERE clause for the query.
 func (b *SelectBuilder) Where(conds ...Condition) *SelectBuilder {
-	b.conds = conds
+	b.where = whereClause{
+		cond: And(conds...),
+	}
 	return b
 }
 
-// Build compiles all provided data to return a SELECT query and arguments.
-func (b SelectBuilder) Build() (string, []interface{}, error) {
-	sb := &strings.Builder{}
+// Build builds the SELECT query.
+func (b SelectBuilder) Build(sb io.StringWriter, aa ArgAppender) {
 	_, _ = sb.WriteString("SELECT ")
 
 	for i, col := range b.cols {
@@ -65,28 +73,36 @@ func (b SelectBuilder) Build() (string, []interface{}, error) {
 		_, _ = sb.WriteString(col)
 	}
 
-	if b.table != nil {
-		_, _ = sb.WriteString(" FROM ")
-		b.table.Build(sb, b.arguments)
+	if b.from != nil {
+		b.from.Build(sb, aa)
 	}
 
-	if len(b.conds) > 0 {
-		_, _ = sb.WriteString(" WHERE ")
-		for i, cond := range b.conds {
-			if i > 0 {
-				_, _ = sb.WriteString(" AND ")
-			}
-			cond(sb, b.arguments)
-		}
+	if b.where != nil {
+		b.where.Build(sb, aa)
 	}
+}
 
-	return sb.String(), b.arguments.args, nil
+// SQL compiles all provided data to return a SELECT query and arguments.
+func (b SelectBuilder) SQL() (string, []interface{}, error) {
+	sb := &strings.Builder{}
+	args := &argumentList{}
+	b.Build(sb, args)
+	return sb.String(), args.Args, nil
 }
 
 type argumentList struct {
-	args []interface{}
+	Args []interface{}
 }
 
 func (l *argumentList) Append(values ...interface{}) {
-	l.args = append(l.args, values...)
+	l.Args = append(l.Args, values...)
+}
+
+type fromClause struct {
+	table Table
+}
+
+func (c fromClause) Build(sb io.StringWriter, aa ArgAppender) {
+	_, _ = sb.WriteString(" FROM ")
+	c.table.Build(sb, aa)
 }
