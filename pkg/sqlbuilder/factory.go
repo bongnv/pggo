@@ -2,6 +2,7 @@ package sqlbuilder
 
 import (
 	"context"
+	"errors"
 )
 
 // DB represents a DB for running queries one.
@@ -16,9 +17,24 @@ type Factory struct {
 }
 
 // Select starts a new SELECT query.
-func (f Factory) Select(cols ...string) SelectBuilder {
-	return SelectBuilder{
-		cols: cols,
-		db:   f.DB,
+func (f Factory) Select(cols ...string) *SelectBuilder {
+	db := f.DB
+	if db == nil {
+		db = noopDB{}
 	}
+
+	return &SelectBuilder{
+		cols: cols,
+		db:   db,
+	}
+}
+
+type noopDB struct{}
+
+func (noopDB) Query(ctx context.Context, query string, args []interface{}, records Recordables) error {
+	return errors.New("sqlbuilder: no DB was provided to execute the query")
+}
+
+func (noopDB) QueryRow(ctx context.Context, query string, args []interface{}, record Recordable) error {
+	return errors.New("sqlbuilder: no DB was provided to execute the query")
 }
