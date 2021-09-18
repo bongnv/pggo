@@ -13,20 +13,20 @@ func Test_Conditions(t *testing.T) {
 	cases := map[string]struct {
 		createCond    func() sqlbuilder.Condition
 		expectedQuery string
-		expectedArgs  []interface{}
+		expectedArgs  sqlbuilder.ArgumentList
 	}{
 		"equal": {
 			createCond: func() sqlbuilder.Condition {
 				return sqlbuilder.Equal("id", 10)
 			},
-			expectedQuery: "(id = ?)",
+			expectedQuery: "(id = $1)",
 			expectedArgs:  []interface{}{10},
 		},
 		"in": {
 			createCond: func() sqlbuilder.Condition {
 				return sqlbuilder.In("id", 1, 2, 3, 4)
 			},
-			expectedQuery: "(id IN (?,?,?,?))",
+			expectedQuery: "(id IN ($1,$2,$3,$4))",
 			expectedArgs:  []interface{}{1, 2, 3, 4},
 		},
 		"and": {
@@ -35,7 +35,7 @@ func Test_Conditions(t *testing.T) {
 				cond2 := sqlbuilder.Equal("name", "Joe")
 				return sqlbuilder.And(cond1, cond2)
 			},
-			expectedQuery: "((id = ?) AND (name = ?))",
+			expectedQuery: "((id = $1) AND (name = $2))",
 			expectedArgs:  []interface{}{10, "Joe"},
 		},
 		"or": {
@@ -44,7 +44,7 @@ func Test_Conditions(t *testing.T) {
 				cond2 := sqlbuilder.Equal("name", "Joe")
 				return sqlbuilder.Or(cond1, cond2)
 			},
-			expectedQuery: "((id = ?) OR (name = ?))",
+			expectedQuery: "((id = $1) OR (name = $2))",
 			expectedArgs:  []interface{}{10, "Joe"},
 		},
 		"empty-and": {
@@ -60,10 +60,14 @@ func Test_Conditions(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			sb := &strings.Builder{}
-			args := &sqlbuilder.ArgumentList{}
-			tc.createCond().Build(sb, args)
+			args := sqlbuilder.ArgumentList{}
+			tc.createCond().Build(sb, &args)
 			require.Equal(t, tc.expectedQuery, sb.String())
-			require.Equal(t, tc.expectedArgs, args.Args)
+			if tc.expectedArgs == nil {
+				require.Empty(t, args)
+			} else {
+				require.Equal(t, tc.expectedArgs, args)
+			}
 		})
 	}
 }

@@ -1,4 +1,4 @@
 CREATE TABLE IF NOT EXISTS sample_table (
-  id UUID PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT NOT NULL
 );

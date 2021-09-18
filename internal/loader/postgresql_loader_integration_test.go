@@ -30,7 +30,7 @@ func Test_PostgreSQLLoader(t *testing.T) {
 
 	require.Equal(t, "id", idCol.Name)
 	require.False(t, idCol.Nullable)
-	require.Equal(t, "uuid", idCol.DataType)
+	require.Equal(t, "integer", idCol.DataType)
 
 	require.Equal(t, "name", nameCol.Name)
 	require.False(t, nameCol.Nullable)
