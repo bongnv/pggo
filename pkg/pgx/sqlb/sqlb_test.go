@@ -13,8 +13,9 @@ import (
 )
 
 type mockRecord struct {
-	ID   int
-	Name string
+	ID     int
+	Name   string
+	Number int
 }
 
 func (m *mockRecord) GetPointer(col string) interface{} {
@@ -23,6 +24,8 @@ func (m *mockRecord) GetPointer(col string) interface{} {
 		return &m.ID
 	case "name":
 		return &m.Name
+	case "number":
+		return &m.Number
 	default:
 		return nil
 	}
