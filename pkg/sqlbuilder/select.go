@@ -2,14 +2,13 @@ package sqlbuilder
 
 import (
 	"context"
-	"errors"
 	"io"
 	"strconv"
 	"strings"
 )
 
 // Select starts a new SELECT query.
-func Select(cols ...string) SelectBuilder {
+func Select(cols ...string) *SelectBuilder {
 	return Factory{}.Select(cols...)
 }
 
@@ -44,12 +43,12 @@ type SelectBuilder struct {
 }
 
 // FromTable sets the FROM clause for the query with the table is provided with a string.
-func (b SelectBuilder) FromTable(table string) SelectBuilder {
+func (b *SelectBuilder) FromTable(table string) *SelectBuilder {
 	return b.From(BaseTable(table))
 }
 
 // From sets the FROM clause from the given table for the query.
-func (b SelectBuilder) From(table Table) SelectBuilder {
+func (b *SelectBuilder) From(table Table) *SelectBuilder {
 	b.from = fromClause{
 		table: table,
 	}
@@ -57,7 +56,7 @@ func (b SelectBuilder) From(table Table) SelectBuilder {
 }
 
 // Where sets the WHERE clause for the query.
-func (b SelectBuilder) Where(conds ...Condition) SelectBuilder {
+func (b *SelectBuilder) Where(conds ...Condition) *SelectBuilder {
 	b.where = whereClause{
 		cond: And(conds...),
 	}
@@ -94,10 +93,6 @@ func (b SelectBuilder) SQL() (string, []interface{}, error) {
 
 // Query sends the query to DB and parses results to the given records.
 func (b SelectBuilder) Query(ctx context.Context, records Recordables) error {
-	if b.db == nil {
-		return errors.New("sqlbuilder: no DB was provided to execute the query")
-	}
-
 	sql, args, err := b.SQL()
 	if err != nil {
 		return err
@@ -110,10 +105,6 @@ func (b SelectBuilder) Query(ctx context.Context, records Recordables) error {
 // If no rows were found it returns ErrNoRows. If multiple rows are returned it
 // ignores all but the first.
 func (b SelectBuilder) QueryRow(ctx context.Context, record Recordable) error {
-	if b.db == nil {
-		return errors.New("sqlbuilder: no DB was provided to execute the query")
-	}
-
 	sql, args, err := b.SQL()
 	if err != nil {
 		return err
