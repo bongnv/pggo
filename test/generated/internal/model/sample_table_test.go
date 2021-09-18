@@ -13,6 +13,6 @@ func Test_SampleTable(t *testing.T) {
 	sql, args, err := sqlbuilder.Select(schema.SampleTable.ID, schema.SampleTable.Name).From(schema.SampleTable).SQL()
 
 	require.NoError(t, err)
-	require.Nil(t, args)
+	require.Empty(t, args)
 	require.Equal(t, "SELECT id, name FROM sample_table", sql)
 }

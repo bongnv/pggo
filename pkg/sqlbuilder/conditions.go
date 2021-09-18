@@ -4,10 +4,10 @@ import (
 	"io"
 )
 
-// ArgAppender is the interface that wraps the Append method.
-type ArgAppender interface {
-	// Append adds an argument into the existing list.
-	Append(values ...interface{})
+// Placeholders is the interface that wraps the Append method.
+type Placeholders interface {
+	// Append adds an argument into the existing and generate a placeholder for it..
+	Append(values ...interface{}) string
 }
 
 // Condition represents a condition in WHERE clause.
@@ -61,7 +61,7 @@ type binaryCond struct {
 	value    Builder
 }
 
-func (c binaryCond) Build(sw io.StringWriter, aa ArgAppender) {
+func (c binaryCond) Build(sw io.StringWriter, aa Placeholders) {
 	_, _ = sw.WriteString("(")
 	_, _ = sw.WriteString(c.col)
 	_, _ = sw.WriteString(" ")
@@ -75,26 +75,23 @@ type placeholder struct {
 	value interface{}
 }
 
-func (p placeholder) Build(sw io.StringWriter, aa ArgAppender) {
-	_, _ = sw.WriteString("?")
-	aa.Append(p.value)
+func (p placeholder) Build(sw io.StringWriter, aa Placeholders) {
+	_, _ = sw.WriteString(aa.Append(p.value))
 }
 
 type groupPlaceholder struct {
 	values []interface{}
 }
 
-func (g groupPlaceholder) Build(sw io.StringWriter, aa ArgAppender) {
-	count := len(g.values)
+func (g groupPlaceholder) Build(sw io.StringWriter, aa Placeholders) {
 	_, _ = sw.WriteString("(")
-	for i := 0; i < count; i++ {
+	for i, v := range g.values {
 		if i > 0 {
 			_, _ = sw.WriteString(",")
 		}
-		_, _ = sw.WriteString("?")
+		_, _ = sw.WriteString(aa.Append(v))
 	}
 	_, _ = sw.WriteString(")")
-	aa.Append(g.values...)
 }
 
 type logicalCond struct {
@@ -103,7 +100,7 @@ type logicalCond struct {
 	conds    []Condition
 }
 
-func (l logicalCond) Build(sw io.StringWriter, aa ArgAppender) {
+func (l logicalCond) Build(sw io.StringWriter, aa Placeholders) {
 	if len(l.conds) == 0 {
 		return
 	}
