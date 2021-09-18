@@ -35,6 +35,7 @@ func (db pgxDB) Query(ctx context.Context, query string, args []interface{}, rec
 	}
 
 	fields := rows.FieldDescriptions()
+	defer rows.Close()
 
 	for rows.Next() {
 		item := records.New()

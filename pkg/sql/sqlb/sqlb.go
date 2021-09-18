@@ -37,6 +37,8 @@ func (db sqlDB) Query(ctx context.Context, query string, args []interface{}, rec
 		return err
 	}
 
+	defer rows.Close()
+
 	for rows.Next() {
 		item := records.New()
 		pointers, err := buildPointers(item, fields)

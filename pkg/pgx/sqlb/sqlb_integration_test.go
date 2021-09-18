@@ -50,6 +50,15 @@ func Test_QueryRow(t *testing.T) {
 			QueryRow(ctx, r)
 		require.Equal(t, pgx.ErrNoRows, err)
 	})
+
+	t.Run("no-record", func(t *testing.T) {
+		r := &mockRecord{}
+		err = sqlb.With(conn).
+			Select("id", "name").
+			FromTable("nonexist_table").
+			QueryRow(ctx, r)
+		require.EqualError(t, err, "ERROR: relation \"nonexist_table\" does not exist (SQLSTATE 42P01)")
+	})
 }
 
 func Test_Query(t *testing.T) {
@@ -79,5 +88,14 @@ func Test_Query(t *testing.T) {
 			Where(sqlbuilder.Equal("id", 1)).
 			Query(ctx, &records)
 		require.EqualError(t, err, "sqlb: notfound is not found")
+	})
+
+	t.Run("no-record", func(t *testing.T) {
+		r := &mockRecord{}
+		err = sqlb.With(conn).
+			Select("id", "name").
+			FromTable("nonexist_table").
+			QueryRow(ctx, r)
+		require.EqualError(t, err, "ERROR: relation \"nonexist_table\" does not exist (SQLSTATE 42P01)")
 	})
 }
