@@ -102,21 +102,21 @@ func Test_Query(t *testing.T) {
 	})
 
 	t.Run("no-record", func(t *testing.T) {
-		r := &mockRecord{}
+		records := mockRecords{}
 		err = sqlb.With(conn).
 			Select("id", "name").
 			FromTable("nonexist_table").
-			QueryRow(ctx, r)
+			Query(ctx, &records)
 		require.EqualError(t, err, "ERROR: relation \"nonexist_table\" does not exist (SQLSTATE 42P01)")
 	})
 
 	t.Run("wrong column type", func(t *testing.T) {
-		r := &mockRecord{}
+		records := mockRecords{}
 		err = sqlb.With(conn).
 			Select("name as number").
 			FromTable("sample_table").
 			Where(sqlbuilder.Equal("id", 1)).
-			QueryRow(ctx, r)
+			Query(ctx, &records)
 		require.EqualError(t, err, "sql: Scan error on column index 0, name \"number\": converting driver.Value type string (\"One\") to a int: invalid syntax")
 	})
 }

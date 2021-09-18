@@ -101,21 +101,21 @@ func Test_Query(t *testing.T) {
 	})
 
 	t.Run("no-record", func(t *testing.T) {
-		r := &mockRecord{}
+		records := mockRecords{}
 		err = sqlb.With(conn).
 			Select("id", "name").
 			FromTable("nonexist_table").
-			QueryRow(ctx, r)
+			Query(ctx, &records)
 		require.EqualError(t, err, "ERROR: relation \"nonexist_table\" does not exist (SQLSTATE 42P01)")
 	})
 
 	t.Run("wrong column type", func(t *testing.T) {
-		r := &mockRecord{}
+		records := mockRecords{}
 		err = sqlb.With(conn).
 			Select("name as number").
 			FromTable("sample_table").
 			Where(sqlbuilder.Equal("id", 1)).
-			QueryRow(ctx, r)
+			Query(ctx, &records)
 		require.EqualError(t, err, "can't scan into dest[0]: unable to assign to *int")
 	})
 }
