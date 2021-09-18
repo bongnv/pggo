@@ -14,32 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type mockRecord struct {
-	ID   int
-	Name string
-}
-
-func (m *mockRecord) GetPointer(col string) interface{} {
-	switch col {
-	case "id":
-		return &m.ID
-	case "name":
-		return &m.Name
-	default:
-		return nil
-	}
-}
-
-type mockRecords []*mockRecord
-
-func (m mockRecords) New() sqlbuilder.Recordable {
-	return &mockRecord{}
-}
-
-func (m *mockRecords) Append(r sqlbuilder.Recordable) {
-	*m = append(*m, r.(*mockRecord))
-}
-
 func Test_QueryRow(t *testing.T) {
 	ctx := context.Background()
 	conn, err := sql.Open("pgx", "postgres://postgres:postgres@localhost:5432/postgres")
