@@ -1,4 +1,4 @@
-package sqlbuilder
+package sqlb
 
 import (
 	"context"

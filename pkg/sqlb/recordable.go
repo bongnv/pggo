@@ -1,4 +1,4 @@
-package sqlbuilder
+package sqlb
 
 // Recordable stores value from a DB row.
 type Recordable interface {

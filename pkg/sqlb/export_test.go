@@ -1,4 +1,4 @@
-package sqlbuilder
+package sqlb
 
 // Bridge package to expose internals for testing.
 

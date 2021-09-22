@@ -1,4 +1,4 @@
-package sqlbuilder
+package sqlb
 
 import (
 	"errors"
@@ -42,7 +42,7 @@ func (b *InsertBuilder) Values(values ...interface{}) *InsertBuilder {
 // SQL compiles all provided data to return an INSERT query and arguments.
 func (b InsertBuilder) SQL() (string, []interface{}, error) {
 	if len(b.values) == 0 {
-		return "", nil, errors.New("sqlbuilder: there must be at least one row")
+		return "", nil, errors.New("sqlb: there must be at least one row")
 	}
 
 	sb := &strings.Builder{}
