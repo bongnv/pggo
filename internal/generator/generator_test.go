@@ -75,11 +75,11 @@ type SampleTable struct {
 schema/mock_table.pggo.go
 package schema
 
-import "github.com/bongnv/pggo/pkg/sqlbuilder"
+import "github.com/bongnv/pggo/pkg/sqlb"
 
 // SampleTable defines the schema of mock_table.
 var SampleTable = struct {
-	sqlbuilder.BaseTable
+	sqlb.BaseTable
 	ID   string
 	Name string
 }{

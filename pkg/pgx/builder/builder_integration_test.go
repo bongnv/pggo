@@ -1,14 +1,14 @@
 //go:build integration
 // +build integration
 
-package sqlb_test
+package builder_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/bongnv/pggo/pkg/pgx/sqlb"
-	"github.com/bongnv/pggo/pkg/sqlbuilder"
+	"github.com/bongnv/pggo/pkg/pgx/builder"
+	"github.com/bongnv/pggo/pkg/sqlb"
 	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
@@ -21,10 +21,10 @@ func Test_QueryRow(t *testing.T) {
 
 	t.Run("happy-path", func(t *testing.T) {
 		r := &mockRecord{}
-		err = sqlb.With(conn).
+		err = builder.With(conn).
 			Select("id", "name").
 			FromTable("sample_table").
-			Where(sqlbuilder.Equal("id", 1)).
+			Where(sqlb.Equal("id", 1)).
 			QueryRow(ctx, r)
 		require.NoError(t, err)
 		require.Equal(t, 1, r.ID)
@@ -33,27 +33,27 @@ func Test_QueryRow(t *testing.T) {
 
 	t.Run("missing-name", func(t *testing.T) {
 		r := &mockRecord{}
-		err := sqlb.With(conn).
+		err := builder.With(conn).
 			Select("id", "name as notfound").
 			FromTable("sample_table").
-			Where(sqlbuilder.Equal("id", 1)).
+			Where(sqlb.Equal("id", 1)).
 			QueryRow(ctx, r)
-		require.EqualError(t, err, "sqlb: notfound is not found")
+		require.EqualError(t, err, "builder: notfound is not found")
 	})
 
 	t.Run("no-record", func(t *testing.T) {
 		r := &mockRecord{}
-		err = sqlb.With(conn).
+		err = builder.With(conn).
 			Select("id", "name").
 			FromTable("sample_table").
-			Where(sqlbuilder.Equal("id", 2)).
+			Where(sqlb.Equal("id", 2)).
 			QueryRow(ctx, r)
 		require.Equal(t, pgx.ErrNoRows, err)
 	})
 
 	t.Run("no-record", func(t *testing.T) {
 		r := &mockRecord{}
-		err = sqlb.With(conn).
+		err = builder.With(conn).
 			Select("id", "name").
 			FromTable("nonexist_table").
 			QueryRow(ctx, r)
@@ -62,10 +62,10 @@ func Test_QueryRow(t *testing.T) {
 
 	t.Run("wrong column type", func(t *testing.T) {
 		r := &mockRecord{}
-		err = sqlb.With(conn).
+		err = builder.With(conn).
 			Select("name as number").
 			FromTable("sample_table").
-			Where(sqlbuilder.Equal("id", 1)).
+			Where(sqlb.Equal("id", 1)).
 			QueryRow(ctx, r)
 		require.EqualError(t, err, "can't scan into dest[0]: unable to assign to *int")
 	})
@@ -79,10 +79,10 @@ func Test_Query(t *testing.T) {
 
 	t.Run("happy-path", func(t *testing.T) {
 		records := mockRecords{}
-		err = sqlb.With(conn).
+		err = builder.With(conn).
 			Select("id", "name").
 			FromTable("sample_table").
-			Where(sqlbuilder.Equal("id", 1)).
+			Where(sqlb.Equal("id", 1)).
 			Query(ctx, &records)
 		require.NoError(t, err)
 		require.Len(t, records, 1)
@@ -92,17 +92,17 @@ func Test_Query(t *testing.T) {
 
 	t.Run("missing-name", func(t *testing.T) {
 		records := mockRecords{}
-		err := sqlb.With(conn).
+		err := builder.With(conn).
 			Select("id", "name as notfound").
 			FromTable("sample_table").
-			Where(sqlbuilder.Equal("id", 1)).
+			Where(sqlb.Equal("id", 1)).
 			Query(ctx, &records)
-		require.EqualError(t, err, "sqlb: notfound is not found")
+		require.EqualError(t, err, "builder: notfound is not found")
 	})
 
 	t.Run("no-record", func(t *testing.T) {
 		records := mockRecords{}
-		err = sqlb.With(conn).
+		err = builder.With(conn).
 			Select("id", "name").
 			FromTable("nonexist_table").
 			Query(ctx, &records)
@@ -111,10 +111,10 @@ func Test_Query(t *testing.T) {
 
 	t.Run("wrong column type", func(t *testing.T) {
 		records := mockRecords{}
-		err = sqlb.With(conn).
+		err = builder.With(conn).
 			Select("name as number").
 			FromTable("sample_table").
-			Where(sqlbuilder.Equal("id", 1)).
+			Where(sqlb.Equal("id", 1)).
 			Query(ctx, &records)
 		require.EqualError(t, err, "can't scan into dest[0]: unable to assign to *int")
 	})

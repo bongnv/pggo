@@ -1,4 +1,4 @@
-package sqlbuilder_test
+package sqlb_test
 
 import (
 	"strings"
@@ -6,50 +6,50 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/bongnv/pggo/pkg/sqlbuilder"
+	"github.com/bongnv/pggo/pkg/sqlb"
 )
 
 func Test_Conditions(t *testing.T) {
 	cases := map[string]struct {
-		createCond    func() sqlbuilder.Condition
+		createCond    func() sqlb.Condition
 		expectedQuery string
-		expectedArgs  sqlbuilder.ArgumentList
+		expectedArgs  sqlb.ArgumentList
 	}{
 		"equal": {
-			createCond: func() sqlbuilder.Condition {
-				return sqlbuilder.Equal("id", 10)
+			createCond: func() sqlb.Condition {
+				return sqlb.Equal("id", 10)
 			},
 			expectedQuery: "(id = $1)",
 			expectedArgs:  []interface{}{10},
 		},
 		"in": {
-			createCond: func() sqlbuilder.Condition {
-				return sqlbuilder.In("id", 1, 2, 3, 4)
+			createCond: func() sqlb.Condition {
+				return sqlb.In("id", 1, 2, 3, 4)
 			},
 			expectedQuery: "(id IN ($1,$2,$3,$4))",
 			expectedArgs:  []interface{}{1, 2, 3, 4},
 		},
 		"and": {
-			createCond: func() sqlbuilder.Condition {
-				cond1 := sqlbuilder.Equal("id", 10)
-				cond2 := sqlbuilder.Equal("name", "Joe")
-				return sqlbuilder.And(cond1, cond2)
+			createCond: func() sqlb.Condition {
+				cond1 := sqlb.Equal("id", 10)
+				cond2 := sqlb.Equal("name", "Joe")
+				return sqlb.And(cond1, cond2)
 			},
 			expectedQuery: "((id = $1) AND (name = $2))",
 			expectedArgs:  []interface{}{10, "Joe"},
 		},
 		"or": {
-			createCond: func() sqlbuilder.Condition {
-				cond1 := sqlbuilder.Equal("id", 10)
-				cond2 := sqlbuilder.Equal("name", "Joe")
-				return sqlbuilder.Or(cond1, cond2)
+			createCond: func() sqlb.Condition {
+				cond1 := sqlb.Equal("id", 10)
+				cond2 := sqlb.Equal("name", "Joe")
+				return sqlb.Or(cond1, cond2)
 			},
 			expectedQuery: "((id = $1) OR (name = $2))",
 			expectedArgs:  []interface{}{10, "Joe"},
 		},
 		"empty-and": {
-			createCond: func() sqlbuilder.Condition {
-				return sqlbuilder.And()
+			createCond: func() sqlb.Condition {
+				return sqlb.And()
 			},
 			expectedQuery: "",
 			expectedArgs:  nil,
@@ -60,7 +60,7 @@ func Test_Conditions(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			sb := &strings.Builder{}
-			args := sqlbuilder.ArgumentList{}
+			args := sqlb.ArgumentList{}
 			tc.createCond().Build(sb, &args)
 			require.Equal(t, tc.expectedQuery, sb.String())
 			if tc.expectedArgs == nil {

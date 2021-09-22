@@ -1,4 +1,4 @@
-package sqlb_test
+package builder_test
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/bongnv/pggo/pkg/sql/sqlb"
-	"github.com/bongnv/pggo/pkg/sqlbuilder"
+	"github.com/bongnv/pggo/pkg/sql/builder"
+	"github.com/bongnv/pggo/pkg/sqlb"
 )
 
 type mockRecord struct {
@@ -33,11 +33,11 @@ func (m *mockRecord) GetPointer(col string) interface{} {
 
 type mockRecords []*mockRecord
 
-func (m mockRecords) New() sqlbuilder.Recordable {
+func (m mockRecords) New() sqlb.Recordable {
 	return &mockRecord{}
 }
 
-func (m *mockRecords) Append(r sqlbuilder.Recordable) {
+func (m *mockRecords) Append(r sqlb.Recordable) {
 	*m = append(*m, r.(*mockRecord))
 }
 
@@ -57,7 +57,7 @@ func Test_sqlDB_Query(t *testing.T) {
 		m := &mockConn{
 			err: errors.New("db error"),
 		}
-		err := sqlb.With(m).Select("id").Query(ctx, &mockRecords{})
+		err := builder.With(m).Select("id").Query(ctx, &mockRecords{})
 		require.EqualError(t, err, "db error")
 	})
 }

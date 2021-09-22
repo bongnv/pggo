@@ -1,10 +1,10 @@
 package schema
 
-import "github.com/bongnv/pggo/pkg/sqlbuilder"
+import "github.com/bongnv/pggo/pkg/sqlb"
 
 // SampleTable defines the schema of sample_table.
 var SampleTable = struct {
-	sqlbuilder.BaseTable
+	sqlb.BaseTable
 	ID   string
 	Name string
 }{
