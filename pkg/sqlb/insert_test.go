@@ -41,16 +41,20 @@ func Test_Insert_SQL(t *testing.T) {
 }
 
 type mockExecer struct {
-	called bool
-	err    error
-	sql    string
-	args   []interface{}
+	called       bool
+	err          error
+	sql          string
+	args         []interface{}
+	affectedRows int64
 }
 
 func (m *mockExecer) Exec(_ context.Context, sql string, args []interface{}, affectedRows *int64) error {
 	m.called = true
 	m.sql = sql
 	m.args = args
+	if affectedRows != nil {
+		*affectedRows = m.affectedRows
+	}
 	return m.err
 }
 
@@ -81,11 +85,15 @@ func Test_Insert_Exec(t *testing.T) {
 	})
 
 	t.Run("run with no error", func(t *testing.T) {
-		db := &mockExecer{}
-		err := sqlb.MakeInsertBuilder(db, "person").Values(1, "Joe").Exec(ctx)
+		db := &mockExecer{
+			affectedRows: 1,
+		}
+		var affectedRows int64
+		err := sqlb.MakeInsertBuilder(db, "person").Values(1, "Joe").AffectedRows(&affectedRows).Exec(ctx)
 		require.NoError(t, err)
 		require.True(t, db.called)
 		require.Equal(t, "INSERT INTO person VALUES ($1,$2)", db.sql)
 		require.Equal(t, []interface{}{1, "Joe"}, db.args)
+		require.EqualValues(t, 1, affectedRows)
 	})
 }
