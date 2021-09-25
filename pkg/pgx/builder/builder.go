@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgproto3/v2"
 	"github.com/jackc/pgx/v4"
 
@@ -13,6 +14,7 @@ import (
 // Conn represents a pgx DB connection.
 type Conn interface {
 	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
+	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
 }
 
 // With creates a builder factory from a DB connection.
@@ -83,6 +85,18 @@ func (db pgxDB) QueryRow(ctx context.Context, query string, args []interface{}, 
 	return rows.Err()
 }
 
+func (db pgxDB) Exec(ctx context.Context, sql string, args []interface{}, affectedRows *int64) error {
+	res, err := db.conn.Exec(ctx, sql, args...)
+	if err != nil {
+		return err
+	}
+
+	if affectedRows != nil {
+		*affectedRows = res.RowsAffected()
+	}
+
+	return nil
+}
 func buildPointers(record sqlb.Recordable, fields []pgproto3.FieldDescription) ([]interface{}, error) {
 	pointers := make([]interface{}, 0, len(fields))
 	for _, field := range fields {

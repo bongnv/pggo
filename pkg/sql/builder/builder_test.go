@@ -41,14 +41,31 @@ func (m *mockRecords) Append(r sqlb.Recordable) {
 	*m = append(*m, r.(*mockRecord))
 }
 
-type mockConn struct {
+type mockResult struct {
 	err error
-	sql string
+}
+
+func (m mockResult) RowsAffected() (int64, error) {
+	return 0, m.err
+}
+
+func (m mockResult) LastInsertId() (int64, error) {
+	return 0, m.err
+}
+
+type mockConn struct {
+	err    error
+	result sql.Result
+	sql    string
 }
 
 func (m *mockConn) QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error) {
 	m.sql = sql
 	return nil, m.err
+}
+
+func (m *mockConn) ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error) {
+	return m.result, m.err
 }
 
 func Test_sqlDB_Query(t *testing.T) {
@@ -58,6 +75,21 @@ func Test_sqlDB_Query(t *testing.T) {
 			err: errors.New("db error"),
 		}
 		err := builder.With(m).Select("id").Query(ctx, &mockRecords{})
+		require.EqualError(t, err, "db error")
+	})
+}
+
+func Test_sqlDB_Exec(t *testing.T) {
+	ctx := context.Background()
+	t.Run("couldn't get affected rows", func(t *testing.T) {
+		m := &mockConn{
+			result: mockResult{
+				err: errors.New("db error"),
+			},
+		}
+
+		var affectRows int64
+		err := builder.With(m).InsertTable("sample_table").Values(1, "Joe").AffectedRows(&affectRows).Exec(ctx)
 		require.EqualError(t, err, "db error")
 	})
 }
