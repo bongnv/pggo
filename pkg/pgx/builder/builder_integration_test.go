@@ -119,3 +119,33 @@ func Test_Query(t *testing.T) {
 		require.EqualError(t, err, "can't scan into dest[0]: unable to assign to *int")
 	})
 }
+
+func Test_Exec(t *testing.T) {
+	ctx := context.Background()
+	conn, err := pgx.Connect(ctx, "postgres://postgres:postgres@localhost:5432/postgres")
+	require.NoError(t, err)
+	defer conn.Close(ctx)
+
+	teardown := func() {
+		_, err := conn.Exec(ctx, "delete from sample_table where id IN (2)")
+		require.NoError(t, err)
+	}
+
+	t.Run("table not found", func(t *testing.T) {
+		err := builder.With(conn).InsertTable("not_found").Values(1, "Joe").Exec(ctx)
+		require.EqualError(t, err, "ERROR: relation \"not_found\" does not exist (SQLSTATE 42P01)")
+	})
+
+	t.Run("insert successfully", func(t *testing.T) {
+		defer teardown()
+		var affectedRows int64
+		err := builder.With(conn).
+			InsertTable("sample_table").
+			Columns("id", "name").
+			Values(2, "Joe Two").
+			AffectedRows(&affectedRows).
+			Exec(ctx)
+		require.NoError(t, err)
+		require.EqualValues(t, 1, affectedRows)
+	})
+}

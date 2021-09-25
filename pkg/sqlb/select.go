@@ -7,11 +7,6 @@ import (
 	"strings"
 )
 
-// Select starts a new SELECT query.
-func Select(cols ...string) *SelectBuilder {
-	return Factory{}.Select(cols...)
-}
-
 // BaseTable represents a table in a database.
 type BaseTable string
 
@@ -34,10 +29,16 @@ type Table interface {
 	tableOnly()
 }
 
+// Queryer is an interface that wraps Query functinos.
+type Queryer interface {
+	Query(ctx context.Context, query string, args []interface{}, records Recordables) error
+	QueryRow(ctx context.Context, query string, args []interface{}, record Recordable) error
+}
+
 // SelectBuilder is a builder implementation of a select query.
 type SelectBuilder struct {
 	cols  []string
-	db    DB
+	db    Queryer
 	from  Builder
 	where Builder
 }

@@ -11,6 +11,7 @@ import (
 // Conn represents a DB connection.
 type Conn interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
 }
 
 // With creates a builder factory to start building queries.
@@ -87,6 +88,21 @@ func (db sqlDB) QueryRow(ctx context.Context, query string, args []interface{}, 
 	}
 
 	return rows.Err()
+}
+
+func (db sqlDB) Exec(ctx context.Context, sql string, args []interface{}, affectedRows *int64) error {
+	res, err := db.conn.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return err
+	}
+
+	if affectedRows != nil {
+		if *affectedRows, err = res.RowsAffected(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func buildPointers(record sqlb.Recordable, fields []string) ([]interface{}, error) {

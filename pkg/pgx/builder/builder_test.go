@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 
@@ -42,13 +43,18 @@ func (m *mockRecords) Append(r sqlb.Recordable) {
 }
 
 type mockConn struct {
-	err error
-	sql string
+	err        error
+	sql        string
+	commandTag pgconn.CommandTag
 }
 
 func (m *mockConn) Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
 	m.sql = sql
 	return nil, m.err
+}
+
+func (m *mockConn) Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error) {
+	return m.commandTag, m.err
 }
 
 func Test_pgxDB_Query(t *testing.T) {

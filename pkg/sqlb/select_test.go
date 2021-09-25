@@ -91,8 +91,7 @@ func (m *mockDB) QueryRow(ctx context.Context, query string, args []interface{},
 func Test_SelectBuilder_Query(t *testing.T) {
 	ctx := context.Background()
 	t.Run("no DB provided", func(t *testing.T) {
-		f := sqlb.Factory{}
-		err := f.Select("id").FromTable("sample").Query(ctx, &mockRecords{})
+		err := sqlb.Select("id").FromTable("sample").Query(ctx, &mockRecords{})
 		require.EqualError(t, err, "sqlb: no DB was provided to execute the query")
 	})
 
@@ -101,8 +100,7 @@ func Test_SelectBuilder_Query(t *testing.T) {
 			err: errors.New("db error"),
 		}
 
-		f := sqlb.Factory{DB: db}
-		err := f.Select("id").FromTable("sample").Query(ctx, &mockRecords{})
+		err := sqlb.MakeSelectBuilder(db, "id").FromTable("sample").Query(ctx, &mockRecords{})
 		require.EqualError(t, err, "db error")
 	})
 
@@ -110,9 +108,8 @@ func Test_SelectBuilder_Query(t *testing.T) {
 		db := &mockDB{
 			data: `[{"id":1},{"id":2}]`,
 		}
-		f := sqlb.Factory{DB: db}
 		records := mockRecords{}
-		err := f.Select("id").FromTable("sample").Query(ctx, &records)
+		err := sqlb.MakeSelectBuilder(db, "id").FromTable("sample").Query(ctx, &records)
 		require.NoError(t, err)
 		require.Equal(t, "SELECT id FROM sample", db.sql)
 		require.Len(t, records, 2)
@@ -123,8 +120,7 @@ func Test_SelectBuilder_Query(t *testing.T) {
 func Test_SelectBuilder_QueryRow(t *testing.T) {
 	ctx := context.Background()
 	t.Run("no DB provided", func(t *testing.T) {
-		f := sqlb.Factory{}
-		err := f.Select("id").FromTable("sample").QueryRow(ctx, &mockRecord{})
+		err := sqlb.Select("id").FromTable("sample").QueryRow(ctx, &mockRecord{})
 		require.EqualError(t, err, "sqlb: no DB was provided to execute the query")
 	})
 
@@ -133,8 +129,7 @@ func Test_SelectBuilder_QueryRow(t *testing.T) {
 			err: errors.New("db error"),
 		}
 
-		f := sqlb.Factory{DB: db}
-		err := f.Select("id").FromTable("sample").QueryRow(ctx, &mockRecord{})
+		err := sqlb.MakeSelectBuilder(db, "id").FromTable("sample").QueryRow(ctx, &mockRecord{})
 		require.EqualError(t, err, "db error")
 	})
 
@@ -142,9 +137,8 @@ func Test_SelectBuilder_QueryRow(t *testing.T) {
 		db := &mockDB{
 			data: `{"id":1}`,
 		}
-		f := sqlb.Factory{DB: db}
 		record := mockRecord{}
-		err := f.Select("id").FromTable("sample").QueryRow(ctx, &record)
+		err := sqlb.MakeSelectBuilder(db, "id").FromTable("sample").QueryRow(ctx, &record)
 		require.NoError(t, err)
 		require.Equal(t, "SELECT id FROM sample", db.sql)
 		require.Equal(t, 1, record.ID)
