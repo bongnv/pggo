@@ -48,6 +48,11 @@ func Test_SelectBuilder_SQL(t *testing.T) {
 		require.Len(t, args, 2)
 		require.Equal(t, []interface{}{1, "Foo"}, args)
 	})
+
+	t.Run("select from error table", func(t *testing.T) {
+		_, _, err := sqlb.Select("id").From(tableWithErr{err: errors.New("random error")}).SQL()
+		require.EqualError(t, err, "random error")
+	})
 }
 
 type mockRecord struct {
@@ -150,6 +155,12 @@ func Test_SelectBuilder_Query(t *testing.T) {
 		require.Len(t, records, 2)
 		require.Equal(t, 1, records[0].ID)
 	})
+
+	t.Run("failed to generate query", func(t *testing.T) {
+		records := mockRecords{}
+		err := sqlb.Select("id").Where(sqlb.In("id")).Query(ctx, &records)
+		require.EqualError(t, err, "values list must not be empty")
+	})
 }
 
 func Test_SelectBuilder_QueryRow(t *testing.T) {
@@ -177,5 +188,11 @@ func Test_SelectBuilder_QueryRow(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "SELECT id FROM sample", db.sql)
 		require.Equal(t, 1, record.ID)
+	})
+
+	t.Run("failed to generate query", func(t *testing.T) {
+		record := mockRecord{}
+		err := sqlb.Select("id").Where(sqlb.In("id")).QueryRow(ctx, &record)
+		require.EqualError(t, err, "values list must not be empty")
 	})
 }
