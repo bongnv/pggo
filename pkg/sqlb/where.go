@@ -6,7 +6,7 @@ type whereClause struct {
 	cond Condition
 }
 
-func (w whereClause) Build(sb io.StringWriter, aa Placeholders) {
+func (w whereClause) Build(sb io.StringWriter, aa Placeholders) error {
 	_, _ = sb.WriteString(" WHERE ")
-	w.cond.Build(sb, aa)
+	return w.cond.Build(sb, aa)
 }

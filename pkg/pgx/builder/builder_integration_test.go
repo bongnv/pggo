@@ -38,7 +38,7 @@ func Test_QueryRow(t *testing.T) {
 			FromTable("sample_table").
 			Where(sqlb.Equal("id", 1)).
 			QueryRow(ctx, r)
-		require.EqualError(t, err, "builder: notfound is not found")
+		require.EqualError(t, err, "notfound doesn't exist")
 	})
 
 	t.Run("no-record", func(t *testing.T) {
@@ -97,7 +97,7 @@ func Test_Query(t *testing.T) {
 			FromTable("sample_table").
 			Where(sqlb.Equal("id", 1)).
 			Query(ctx, &records)
-		require.EqualError(t, err, "builder: notfound is not found")
+		require.EqualError(t, err, "notfound doesn't exist")
 	})
 
 	t.Run("no-record", func(t *testing.T) {

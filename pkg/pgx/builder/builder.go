@@ -2,7 +2,6 @@ package builder
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgproto3/v2"
@@ -30,7 +29,7 @@ type pgxDB struct {
 	conn Conn
 }
 
-func (db pgxDB) Query(ctx context.Context, query string, args []interface{}, records sqlb.Recordables) error {
+func (db pgxDB) Query(ctx context.Context, query string, args []interface{}, records sqlb.EntityList) error {
 	rows, err := db.conn.Query(ctx, query, args...)
 	if err != nil {
 		return err
@@ -56,7 +55,7 @@ func (db pgxDB) Query(ctx context.Context, query string, args []interface{}, rec
 	return rows.Err()
 }
 
-func (db pgxDB) QueryRow(ctx context.Context, query string, args []interface{}, record sqlb.Recordable) error {
+func (db pgxDB) QueryRow(ctx context.Context, query string, args []interface{}, record sqlb.Entity) error {
 	rows, err := db.conn.Query(ctx, query, args...)
 	if err != nil {
 		return err
@@ -97,15 +96,12 @@ func (db pgxDB) Exec(ctx context.Context, sql string, args []interface{}, affect
 
 	return nil
 }
-func buildPointers(record sqlb.Recordable, fields []pgproto3.FieldDescription) ([]interface{}, error) {
-	pointers := make([]interface{}, 0, len(fields))
-	for _, field := range fields {
-		pointer := record.GetPointer(string(field.Name))
-		if pointer == nil {
-			return nil, fmt.Errorf("builder: %s is not found", field.Name)
-		}
-		pointers = append(pointers, pointer)
+func buildPointers(record sqlb.Entity, fields []pgproto3.FieldDescription) ([]interface{}, error) {
+	cols := make([]string, len(fields))
+
+	for i, f := range fields {
+		cols[i] = string(f.Name)
 	}
 
-	return pointers, nil
+	return record.GetPointers(cols)
 }

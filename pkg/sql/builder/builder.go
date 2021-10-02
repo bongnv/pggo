@@ -3,7 +3,6 @@ package builder
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/bongnv/pggo/pkg/sqlb"
 )
@@ -27,7 +26,7 @@ type sqlDB struct {
 	conn Conn
 }
 
-func (db sqlDB) Query(ctx context.Context, query string, args []interface{}, records sqlb.Recordables) error {
+func (db sqlDB) Query(ctx context.Context, query string, args []interface{}, records sqlb.EntityList) error {
 	rows, err := db.conn.QueryContext(ctx, query, args...)
 	if err != nil {
 		return err
@@ -42,7 +41,7 @@ func (db sqlDB) Query(ctx context.Context, query string, args []interface{}, rec
 
 	for rows.Next() {
 		item := records.New()
-		pointers, err := buildPointers(item, fields)
+		pointers, err := item.GetPointers(fields)
 		if err != nil {
 			return err
 		}
@@ -57,7 +56,7 @@ func (db sqlDB) Query(ctx context.Context, query string, args []interface{}, rec
 	return rows.Err()
 }
 
-func (db sqlDB) QueryRow(ctx context.Context, query string, args []interface{}, record sqlb.Recordable) error {
+func (db sqlDB) QueryRow(ctx context.Context, query string, args []interface{}, record sqlb.Entity) error {
 	rows, err := db.conn.QueryContext(ctx, query, args...)
 	if err != nil {
 		return err
@@ -78,7 +77,7 @@ func (db sqlDB) QueryRow(ctx context.Context, query string, args []interface{}, 
 		return err
 	}
 
-	pointers, err := buildPointers(record, fields)
+	pointers, err := record.GetPointers(fields)
 	if err != nil {
 		return err
 	}
@@ -103,17 +102,4 @@ func (db sqlDB) Exec(ctx context.Context, sql string, args []interface{}, affect
 	}
 
 	return nil
-}
-
-func buildPointers(record sqlb.Recordable, fields []string) ([]interface{}, error) {
-	pointers := make([]interface{}, 0, len(fields))
-	for _, field := range fields {
-		pointer := record.GetPointer(field)
-		if pointer == nil {
-			return nil, fmt.Errorf("builder: %s is not found", field)
-		}
-		pointers = append(pointers, pointer)
-	}
-
-	return pointers, nil
 }

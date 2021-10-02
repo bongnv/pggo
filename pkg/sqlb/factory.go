@@ -7,8 +7,8 @@ import (
 
 // DB represents a DB for running queries one.
 type DB interface {
-	Query(ctx context.Context, query string, args []interface{}, records Recordables) error
-	QueryRow(ctx context.Context, query string, args []interface{}, record Recordable) error
+	Query(ctx context.Context, query string, args []interface{}, records EntityList) error
+	QueryRow(ctx context.Context, query string, args []interface{}, record Entity) error
 	Exec(ctx context.Context, sql string, arg []interface{}, affectedRows *int64) error
 }
 
@@ -45,11 +45,11 @@ var DefaultFactory = Factory{
 
 type noopDB struct{}
 
-func (noopDB) Query(ctx context.Context, query string, args []interface{}, records Recordables) error {
+func (noopDB) Query(ctx context.Context, query string, args []interface{}, records EntityList) error {
 	return errors.New("sqlb: no DB was provided to execute the query")
 }
 
-func (noopDB) QueryRow(ctx context.Context, query string, args []interface{}, record Recordable) error {
+func (noopDB) QueryRow(ctx context.Context, query string, args []interface{}, record Entity) error {
 	return errors.New("sqlb: no DB was provided to execute the query")
 }
 

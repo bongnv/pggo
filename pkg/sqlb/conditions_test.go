@@ -14,6 +14,7 @@ func Test_Conditions(t *testing.T) {
 		createCond    func() sqlb.Condition
 		expectedQuery string
 		expectedArgs  sqlb.ArgumentList
+		expectedErr   string
 	}{
 		"equal": {
 			createCond: func() sqlb.Condition {
@@ -47,12 +48,24 @@ func Test_Conditions(t *testing.T) {
 			expectedQuery: "((id = $1) OR (name = $2))",
 			expectedArgs:  []interface{}{10, "Joe"},
 		},
-		"empty-and": {
+		"empty and": {
 			createCond: func() sqlb.Condition {
 				return sqlb.And()
 			},
-			expectedQuery: "",
-			expectedArgs:  nil,
+			expectedErr: "conditions list must not be empty",
+		},
+		"empty in": {
+			createCond: func() sqlb.Condition {
+				return sqlb.In("id")
+			},
+			expectedErr: "values list must not be empty",
+		},
+		"and with error": {
+			createCond: func() sqlb.Condition {
+				cond1 := sqlb.Equal("id", 10)
+				return sqlb.And(cond1, sqlb.In("id"))
+			},
+			expectedErr: "values list must not be empty",
 		},
 	}
 
@@ -61,8 +74,16 @@ func Test_Conditions(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			sb := &strings.Builder{}
 			args := sqlb.ArgumentList{}
-			tc.createCond().Build(sb, &args)
+			err := tc.createCond().Build(sb, &args)
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+				return
+			}
+
 			require.Equal(t, tc.expectedQuery, sb.String())
+
 			if tc.expectedArgs == nil {
 				require.Empty(t, args)
 			} else {
