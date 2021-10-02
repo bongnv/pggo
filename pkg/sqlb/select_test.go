@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,7 @@ import (
 	"github.com/bongnv/pggo/pkg/sqlb"
 )
 
-func Test_SelectBuilder_Build(t *testing.T) {
+func Test_SelectBuilder_SQL(t *testing.T) {
 	t.Run("table withstring", func(t *testing.T) {
 		sql, args, err := sqlb.Select("id", "name").FromTable("person").SQL()
 		require.NoError(t, err)
@@ -35,6 +36,11 @@ func Test_SelectBuilder_Build(t *testing.T) {
 		require.Equal(t, []interface{}{1}, args)
 	})
 
+	t.Run("select with error where", func(t *testing.T) {
+		_, _, err := sqlb.Select("id").Where(sqlb.In("id")).SQL()
+		require.EqualError(t, err, "values list must not be empty")
+	})
+
 	t.Run("select with where and multiples conds", func(t *testing.T) {
 		sql, args, err := sqlb.Select("id").FromTable("person").Where(sqlb.Equal("id", 1), sqlb.Equal("name", "Foo")).SQL()
 		require.NoError(t, err)
@@ -49,24 +55,53 @@ type mockRecord struct {
 	Name string
 }
 
-func (m *mockRecord) GetPointer(col string) interface{} {
-	switch col {
-	case "id":
-		return &m.ID
-	case "name":
-		return &m.Name
-	default:
-		return nil
+func (m *mockRecord) GetPointers(cols []string) ([]interface{}, error) {
+	if len(cols) == 0 {
+		return []interface{}{&m.ID, &m.Name}, nil
 	}
+
+	pointers := make([]interface{}, len(cols))
+	for i, col := range cols {
+		switch col {
+		case "id":
+			pointers[i] = &m.ID
+		case "name":
+			pointers[i] = &m.Name
+		default:
+			return nil, fmt.Errorf("%s couldn't be found", col)
+		}
+	}
+
+	return pointers, nil
+}
+
+func (m *mockRecord) GetValues(cols []string) ([]interface{}, error) {
+	if len(cols) == 0 {
+		return []interface{}{m.ID, m.Name}, nil
+	}
+
+	values := make([]interface{}, len(cols))
+	for i, col := range cols {
+		switch col {
+		case "id":
+			values[i] = m.ID
+		case "name":
+			values[i] = m.Name
+		default:
+			return nil, fmt.Errorf("%s couldn't be found", col)
+		}
+	}
+
+	return values, nil
 }
 
 type mockRecords []*mockRecord
 
-func (m mockRecords) New() sqlb.Recordable {
+func (m mockRecords) New() sqlb.Entity {
 	return &mockRecord{}
 }
 
-func (m *mockRecords) Append(r sqlb.Recordable) {
+func (m *mockRecords) Append(r sqlb.Entity) {
 	*m = append(*m, r.(*mockRecord))
 }
 
@@ -76,13 +111,13 @@ type mockDB struct {
 	sql  string
 }
 
-func (m *mockDB) Query(ctx context.Context, query string, args []interface{}, records sqlb.Recordables) error {
+func (m *mockDB) Query(ctx context.Context, query string, args []interface{}, records sqlb.EntityList) error {
 	m.sql = query
 	_ = json.Unmarshal([]byte(m.data), records)
 	return m.err
 }
 
-func (m *mockDB) QueryRow(ctx context.Context, query string, args []interface{}, record sqlb.Recordable) error {
+func (m *mockDB) QueryRow(ctx context.Context, query string, args []interface{}, record sqlb.Entity) error {
 	m.sql = query
 	_ = json.Unmarshal([]byte(m.data), record)
 	return m.err

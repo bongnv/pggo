@@ -3,12 +3,22 @@ package sqlb_test
 import (
 	"context"
 	"errors"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/bongnv/pggo/pkg/sqlb"
 )
+
+type tableWithErr struct {
+	sqlb.BaseTable
+	err error
+}
+
+func (t tableWithErr) Build(sw io.StringWriter, args sqlb.Placeholders) error {
+	return t.err
+}
 
 func Test_Insert_SQL(t *testing.T) {
 	t.Run("via table name", func(t *testing.T) {
@@ -37,6 +47,37 @@ func Test_Insert_SQL(t *testing.T) {
 		require.EqualError(t, err, "sqlb: there must be at least one row")
 		require.Empty(t, sql)
 		require.Empty(t, args)
+	})
+
+	t.Run("with entity", func(t *testing.T) {
+		sql, args, err := sqlb.InsertTable("person").
+			Entities(&mockRecord{
+				ID:   1,
+				Name: "Joe",
+			}).
+			SQL()
+		require.NoError(t, err)
+		require.Equal(t, "INSERT INTO person VALUES ($1,$2)", sql)
+		require.Equal(t, []interface{}{1, "Joe"}, args)
+	})
+
+	t.Run("with non exist columne & entity", func(t *testing.T) {
+		_, _, err := sqlb.InsertTable("person").
+			Columns("id", "non_exist").
+			Entities(&mockRecord{
+				ID:   1,
+				Name: "Joe",
+			}).
+			SQL()
+		require.EqualError(t, err, "non_exist couldn't be found")
+	})
+
+	t.Run("table with error", func(t *testing.T) {
+		table := tableWithErr{
+			err: errors.New("random error"),
+		}
+		_, _, err := sqlb.Insert(table).Values(1, "Joe").SQL()
+		require.EqualError(t, err, "random error")
 	})
 }
 

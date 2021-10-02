@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,26 +19,55 @@ type mockRecord struct {
 	Number int
 }
 
-func (m *mockRecord) GetPointer(col string) interface{} {
-	switch col {
-	case "id":
-		return &m.ID
-	case "name":
-		return &m.Name
-	case "number":
-		return &m.Number
-	default:
-		return nil
+func (m *mockRecord) GetPointers(cols []string) ([]interface{}, error) {
+	if len(cols) == 0 {
+		return []interface{}{&m.ID, &m.Name, &m.Number}, nil
 	}
+
+	pointers := make([]interface{}, len(cols))
+	for i, col := range cols {
+		switch col {
+		case "id":
+			pointers[i] = &m.ID
+		case "name":
+			pointers[i] = &m.Name
+		case "number":
+			pointers[i] = &m.Number
+		default:
+			return nil, fmt.Errorf("%s doesn't exist", col)
+		}
+	}
+	return pointers, nil
+}
+
+func (m *mockRecord) GetValues(cols []string) ([]interface{}, error) {
+	if len(cols) == 0 {
+		return []interface{}{m.ID, m.Name, m.Number}, nil
+	}
+
+	values := make([]interface{}, len(cols))
+	for i, col := range cols {
+		switch col {
+		case "id":
+			values[i] = m.ID
+		case "name":
+			values[i] = m.Name
+		case "number":
+			values[i] = m.Number
+		default:
+			return nil, fmt.Errorf("%s doesn't exist", col)
+		}
+	}
+	return values, nil
 }
 
 type mockRecords []*mockRecord
 
-func (m mockRecords) New() sqlb.Recordable {
+func (m mockRecords) New() sqlb.Entity {
 	return &mockRecord{}
 }
 
-func (m *mockRecords) Append(r sqlb.Recordable) {
+func (m *mockRecords) Append(r sqlb.Entity) {
 	*m = append(*m, r.(*mockRecord))
 }
 

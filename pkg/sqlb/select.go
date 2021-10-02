@@ -11,8 +11,9 @@ import (
 type BaseTable string
 
 // Build adds table name to the SQL query.
-func (t BaseTable) Build(sw io.StringWriter, _ Placeholders) {
+func (t BaseTable) Build(sw io.StringWriter, _ Placeholders) error {
 	_, _ = sw.WriteString(string(t))
+	return nil
 }
 
 func (t BaseTable) tableOnly() {}
@@ -20,7 +21,7 @@ func (t BaseTable) tableOnly() {}
 // Builder is the interface that wraps the Build method.
 type Builder interface {
 	// Build contructs SQL and update arguments if necessary.
-	Build(sw io.StringWriter, args Placeholders)
+	Build(sw io.StringWriter, args Placeholders) error
 }
 
 // Table is an interface of a table.
@@ -31,8 +32,8 @@ type Table interface {
 
 // Queryer is an interface that wraps Query functinos.
 type Queryer interface {
-	Query(ctx context.Context, query string, args []interface{}, records Recordables) error
-	QueryRow(ctx context.Context, query string, args []interface{}, record Recordable) error
+	Query(ctx context.Context, query string, args []interface{}, records EntityList) error
+	QueryRow(ctx context.Context, query string, args []interface{}, record Entity) error
 }
 
 // SelectBuilder is a builder implementation of a select query.
@@ -65,7 +66,7 @@ func (b *SelectBuilder) Where(conds ...Condition) *SelectBuilder {
 }
 
 // Build builds the SELECT query.
-func (b SelectBuilder) Build(sb io.StringWriter, aa Placeholders) {
+func (b SelectBuilder) Build(sb io.StringWriter, aa Placeholders) error {
 	_, _ = sb.WriteString("SELECT ")
 
 	for i, col := range b.cols {
@@ -76,24 +77,33 @@ func (b SelectBuilder) Build(sb io.StringWriter, aa Placeholders) {
 	}
 
 	if b.from != nil {
-		b.from.Build(sb, aa)
+		if err := b.from.Build(sb, aa); err != nil {
+			return err
+		}
 	}
 
 	if b.where != nil {
-		b.where.Build(sb, aa)
+		if err := b.where.Build(sb, aa); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 // SQL compiles all provided data to return a SELECT query and arguments.
 func (b SelectBuilder) SQL() (string, []interface{}, error) {
 	sb := &strings.Builder{}
 	args := argumentList{}
-	b.Build(sb, &args)
+	if err := b.Build(sb, &args); err != nil {
+		return "", nil, err
+	}
+
 	return sb.String(), args, nil
 }
 
 // Query sends the query to DB and parses results to the given records.
-func (b SelectBuilder) Query(ctx context.Context, records Recordables) error {
+func (b SelectBuilder) Query(ctx context.Context, records EntityList) error {
 	sql, args, err := b.SQL()
 	if err != nil {
 		return err
@@ -105,7 +115,7 @@ func (b SelectBuilder) Query(ctx context.Context, records Recordables) error {
 // QueryRow sends the query to DB and parses results to the given record.
 // If no rows were found it returns ErrNoRows. If multiple rows are returned it
 // ignores all but the first.
-func (b SelectBuilder) QueryRow(ctx context.Context, record Recordable) error {
+func (b SelectBuilder) QueryRow(ctx context.Context, record Entity) error {
 	sql, args, err := b.SQL()
 	if err != nil {
 		return err
@@ -125,7 +135,7 @@ type fromClause struct {
 	table Table
 }
 
-func (c fromClause) Build(sb io.StringWriter, aa Placeholders) {
+func (c fromClause) Build(sb io.StringWriter, aa Placeholders) error {
 	_, _ = sb.WriteString(" FROM ")
-	c.table.Build(sb, aa)
+	return c.table.Build(sb, aa)
 }

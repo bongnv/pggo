@@ -1,6 +1,7 @@
 package sqlb
 
 import (
+	"errors"
 	"io"
 )
 
@@ -61,29 +62,37 @@ type binaryCond struct {
 	value    Builder
 }
 
-func (c binaryCond) Build(sw io.StringWriter, aa Placeholders) {
+func (c binaryCond) Build(sw io.StringWriter, aa Placeholders) error {
 	_, _ = sw.WriteString("(")
 	_, _ = sw.WriteString(c.col)
 	_, _ = sw.WriteString(" ")
 	_, _ = sw.WriteString(c.operator)
 	_, _ = sw.WriteString(" ")
-	c.value.Build(sw, aa)
+	if err := c.value.Build(sw, aa); err != nil {
+		return err
+	}
 	_, _ = sw.WriteString(")")
+	return nil
 }
 
 type placeholder struct {
 	value interface{}
 }
 
-func (p placeholder) Build(sw io.StringWriter, aa Placeholders) {
+func (p placeholder) Build(sw io.StringWriter, aa Placeholders) error {
 	_, _ = sw.WriteString(aa.Append(p.value))
+	return nil
 }
 
 type groupPlaceholder struct {
 	values []interface{}
 }
 
-func (g groupPlaceholder) Build(sw io.StringWriter, aa Placeholders) {
+func (g groupPlaceholder) Build(sw io.StringWriter, aa Placeholders) error {
+	if len(g.values) == 0 {
+		return errors.New("values list must not be empty")
+	}
+
 	_, _ = sw.WriteString("(")
 	for i, v := range g.values {
 		if i > 0 {
@@ -92,6 +101,8 @@ func (g groupPlaceholder) Build(sw io.StringWriter, aa Placeholders) {
 		_, _ = sw.WriteString(aa.Append(v))
 	}
 	_, _ = sw.WriteString(")")
+
+	return nil
 }
 
 type logicalCond struct {
@@ -100,14 +111,13 @@ type logicalCond struct {
 	conds    []Condition
 }
 
-func (l logicalCond) Build(sw io.StringWriter, aa Placeholders) {
+func (l logicalCond) Build(sw io.StringWriter, aa Placeholders) error {
 	if len(l.conds) == 0 {
-		return
+		return errors.New("conditions list must not be empty")
 	}
 
 	if len(l.conds) == 1 {
-		l.conds[0].Build(sw, aa)
-		return
+		return l.conds[0].Build(sw, aa)
 	}
 
 	_, _ = sw.WriteString("(")
@@ -117,7 +127,10 @@ func (l logicalCond) Build(sw io.StringWriter, aa Placeholders) {
 			_, _ = sw.WriteString(l.operator)
 			_, _ = sw.WriteString(" ")
 		}
-		cond.Build(sw, aa)
+		if err := cond.Build(sw, aa); err != nil {
+			return err
+		}
 	}
 	_, _ = sw.WriteString(")")
+	return nil
 }
